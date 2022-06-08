@@ -29,7 +29,7 @@
 - scikit_learn==0.24.1
 
 ### 运行方式
-0. **下载意图识别模型文件**
+**下载意图识别模型文件**
 
 链接：https://pan.baidu.com/s/1HYB3RwfDs_JcreuEYH51Tw 
 提取码：b3cd 
