@@ -1,0 +1,5 @@
+newdata/
+pre_model/
+model/
+_pycache_/
+*.weights

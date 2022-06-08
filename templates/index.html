@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{{ url_for('static', filename = 'css/index.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename = 'css/qa.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename = 'css/bootstrap.css') }}" rel="stylesheet">
+    <script src="https://libs.baidu.com/jquery/2.1.4/jquery.min.js"></script>
+    <title>KGQA</title>
+    <!-- <script src="{{ url_for('static', filename = 'js/head.js') }}"></script> -->
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "https://hm.baidu.com/hm.js?cdef6708f1dc40904a5927911ec338c8";
+            var s = document.getElementsByTagName("script")[0]; 
+            s.parentNode.insertBefore(hm, s);
+        })();
+
+var usertext=""
+var initext="hi,我是O宝，真正关心你的智能医疗助手:-)"
+var aitext="1"
+//计时器变量
+var fishAlert;
+//弹出功能函数
+function textShow_ai(num){
+    $("#bubble_ai").removeClass("end")
+    $("#bubble_ai").removeClass("toastAni")
+    if(aitext=="")
+        return;
+    $("#bubble_ai").html(aitext).addClass("toastAni")
+    
+    console.log("textshow")
+    fishAlert=setTimeout(function(){
+        $("#bubble_ai").addClass("end")
+        $("#bubble_ai").removeClass("toastAni")
+        console.log("end")
+    },1000)
+
+}
+
+function textinit(){
+    $("#bubble").removeClass("end")
+    $("#bubble").removeClass("toastAni")
+    $("#bubble").html(initext).addClass("toastAni")
+    
+    console.log("textshow")
+    fishAlert=setTimeout(function(){
+        $("#bubble").addClass("end")
+        $("#bubble").removeClass("toastAni")
+        console.log("end")
+    },1000)
+
+}
+
+$(document).ready(function(){
+    //动画时间4000ms，间隔时间8000ms
+        textinit()
+})
+
+
+function textShow(){
+    $("#bubble_r").removeClass("end")
+    $("#bubble_ai").removeClass("end")
+    $("#bubble_r").removeClass("toastAni")
+    if(usertext=="")
+        return 1;
+    $("#bubble_r").html(usertext).addClass("toastAni")
+    
+    console.log("textshow")
+    fishAlert=setTimeout(function(){
+        $("#bubble_r").addClass("end")
+        $("#bubble_r").removeClass("toastAni")
+        console.log("end")
+    },1000)
+    return 0;
+}
+
+var re_json;
+
+function stext()
+{
+    usertext=$("#utext").val()
+        textShow_ai(textShow())
+
+    initsvg()
+}
+
+
+
+
+
+    </script>
+</head>
+<body class="body">
+    
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <!-- <script src="{{ url_for('static', filename = 'js/qa.js') }}"></script> -->
+    <script>
+        $(document).ready(
+function initsvg() {
+
+    console.log(document.getElementById("btn1"))
+    d3.select("#svg1").html("")
+    // 定义svg变量，选出第一个图
+    var svg = d3.select("#svg1"), 
+              width = document.getElementById("svg1").clientWidth*0.7,
+              height = document.getElementById("svg1").clientHeight*0.8
+    var colors = ['#005CAF', '#A5DEE4', '#B28FCE'];
+//    var outlier_avatar_ID = ['0001', '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009', '0177', '0377', '0378', '0659'];
+
+
+    // var help = ['小助手', '1.开始如果没有节点和边的网状可视化显示，刷新便可出现', '2.鼠标放置在任意节点上，出现和此节点相关的所有节点及之间的关系，右侧自动呈现菜品相关信息', '3.搜索框中输入菜品名称，呈现此菜品所有相关节点，并且此时鼠标位于某个节点上方时移开鼠标能够保持知识图谱当前状态', '4.模式切换按钮可切换对节点的不同可视化表示，Circles为点，Texts为文字', '5.左侧不同颜色的条形表示不同类型的节点，On/Off切换开关可打开或关闭同样类型所有节点的可视化显示'];
+    // $('#tips').append("<div><span>" + help[0] + "</span></div>")
+    // for (var i = 1; i < help.length; i++) {
+    //     // 选中indicator，每一种都append一个div，就是前面的小色块
+    //     $('#tips').append("<div>" + help[i] +"</div>")
+    // }
+
+    // 定义D3的simulation是如何展示出来的
+    var simulation = d3.forceSimulation()
+        .force("link", d3.forceLink().id(function(d) {
+            return d.id;
+        }))
+        .force("charge", d3.forceManyBody().strength(-400))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force('x', d3.forceX(width/8))
+        .force('y', d3.forceY(height/8))
+    // 存之后生成的关系图数据
+    var graph;
+
+    d3.json("https://raw.githubusercontent.com/PrinsYin/KGQA_group/main/vizdata.json", function load_graph(error, data) {
+        if (error) throw error;
+        // return;
+        console.log("load1")
+        graph = data;
+        console.log(data)
+
+        // D3数据驱动文档
+        // 用links去驱动line的线宽
+        var link = svg.append('g')
+            .attr("class", "links")
+            .selectAll("line")
+            .data(graph.links)
+            .enter().append("line")
+            .style("color","red")
+            .attr('stroke-width', function(d){
+            // return Math.sqrt(d.value);
+            return 4;//连线宽度
+            });
+
+        //边上的文字（实体之间的关系） 
+        var linktext = svg.append('g')
+            .attr("class", "linetexts")
+            .selectAll("text")
+            .data(graph.links)
+            .enter()
+            .append("text")
+            .style("display","block")
+            .style("color","red")
+            .text(function(d){
+                return d.relation;
+            })
+            .attr('fill', "black");//边上字颜色
+
+        // 添加所有的node
+        var node = svg.append('g')
+            .attr('class', 'nodes')
+            .selectAll('circle')
+            .data(graph.nodes)
+            .enter().append('circle')
+            .attr("r", function(d) {
+                return d.size
+            })
+            .attr('fill', function(d){ // 填充的颜色
+                return colors[d.group];
+            })
+            .attr('stroke', 'none')    // 没有描边
+            .attr('name', function(d){
+                return d.id;
+            })
+            .attr('namee',function(d){
+                return d.class;
+            })
+            .call(d3.drag()             // 绑定d3的拖动函数
+                .on("start", dragstarted) // 拖动开始
+                .on("drag", dragged)      // 拖动进行
+                .on("end", dragended));   // 拖动结束
+
+        // 文本
+        // 两种显示模式，每个结点可以用一个圆或者文本表示
+        var text = svg.append('g')
+            .attr("class", "texts")
+            .selectAll("text")
+            .data(graph.nodes)
+            .enter().append("text")
+            .attr("font-size", function(d) {
+                return d.size
+            })
+            .attr("fill", function(d) {
+                return colors[d.group];
+            })
+            .attr('name', function(d) {
+                return d.id;
+            })
+            .attr('namee',function(d){
+                return d.class;
+            })
+            .text(function(d) {
+                return d.id;
+            })
+            .attr('text-anchor', 'middle')
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
+
+        // 给node加title, 当鼠标悬浮在圆圈上的时候
+        node.append('title').text(function(d){
+            return d.id;
+        })
+
+        // 处理缩放
+        svg.call(d3.zoom()
+            .scaleExtent([1 / 8, 8])
+            .on("zoom", zoomed));
+         
+        function zoomed() {
+            link.attr("transform", d3.event.transform);
+            node.attr("transform", d3.event.transform);
+            text.attr("transform", d3.event.transform);
+            linktext.attr('transform', d3.event.transform);
+        }
+
+        simulation
+            .nodes(graph.nodes)
+            .on("tick", ticked);
+
+        simulation.force("link")
+            .links(graph.links);
+
+        function ticked() {
+            link
+                .attr("x1", function(d) {
+                    return d.source.x;
+                })
+                .attr("y1", function(d) {
+                    return d.source.y;
+                })
+                .attr("x2", function(d) {
+                    return d.target.x;
+                })
+                .attr("y2", function(d) {
+                    return d.target.y;
+                });
+
+            linktext.attr("dx",function(d){ return (d.source.x + d.target.x) / 2 ; });
+            linktext.attr("dy",function(d){ return (d.source.y + d.target.y) / 2 ; });
+
+            node
+                .attr("cx", function(d) {
+                    return d.x;
+                })
+                .attr("cy", function(d) {
+                    return d.y;
+                });
+
+            text
+                .attr("dx", function(d) {
+                    return d.x;
+                })
+                .attr("dy", function(d) {
+                    return d.y;
+                });
+        }
+    })
+
+    // 拖动事件函数
+    var dragging = false;
+
+    function dragstarted(d) {
+        if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+        dragging = true;
+    }
+
+    function dragged(d) {
+        d.fx = d3.event.x;
+        d.fy = d3.event.y;
+    }
+
+    function dragended(d) {
+        if (!d3.event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+        dragging = false;
+    }
+
+    // 处理模式点击后的事件(这些元素页面上本来有)
+    $('#mode span').click(function(event) {
+        // 把mode里面所有span的active全部去掉
+        // 把被点击的这个设置为active
+        $('#mode span').removeClass('active')
+        $(this).addClass('active')
+
+        if ($(this).text() == 'Circles') {
+            // 隐藏所有文本里面的svg元素
+            // 把node里面的显示出来
+            $('.texts text').hide();
+            $('.nodes circle').show();
+        }
+        else {
+            $('.texts text').show();
+            $('.nodes circle').hide ();
+        }
+    });
+
+    // // 三个开关标志，True表示打开
+    // var sw1 = true;
+    // var sw2 = true;
+    // var sw3 = true;
+    // 处理事件：选中结点后只显示选中点及其直接相邻点
+    // 这些元素原来没有，后面添加上去，所以写法和上面不同
+    // 为#svg1中所有的 `.nodes circle` 元素，绑定了 `mouseenter`事件 
+    $('#svg1').on('mouseenter', '.nodes circle', function(event) {
+        // 拖动的时候，如果碰到别的结点，效果会发生变化，看起来很乱
+        // 所以拖动的时候不允许触发鼠标进入事件
+        if (!dragging) {
+            var name = $(this).attr('name');
+
+            var namee = $(this).attr('namee')
+            // 把info标题的颜色改为结点所属类别的颜色
+            $('#info h1').css('color', "black").text(namee);
+            // 把info标题的颜色改为结点所属类别的颜色
+            $('#info h5').css('color', "black").text(name);
+            // 去掉旧的<p></p>
+            $('#info p').remove();
+
+            
+	    // 增加各个人物的头像
+            if (typeof(info[name]) != "undefined") {
+                //avatar_ID = info[name]['ID'][0]
+                //if(outlier_avatar_ID.indexOf(avatar_ID) != -1) {
+                //    avatar_ID = avatar_ID + '0'
+                //}
+	    if ('主料' in info[name]){
+		    $('#info').append('<p>' + '<img src="https://raw.githubusercontent.com/ngl567/CookBook-KG/master/visualization/recipe_photo/' + name + '.jpg" />' + '</p>');
+	    }
+            }
+            for (var key in info[name]) {
+                value = info[name][key];
+
+                var flag_none = false;
+                for (var item in value) {
+                    if (value[item] == null || value[item] == 'N/A' || value[item] == '') {
+                        flag_none = true;
+                        break;
+                    }
+                } 
+                if (flag_none == true) {              // 排除为空的属性值
+                    continue;
+                }
+
+                $('#info').append('<p><span>' + key + '</span></p>');
+		var item_info = '';
+		count = 0
+		for (var food_item in info[name][key]){
+			if (count == 0){
+				item_info = item_info + info[name][key][food_item];
+			}
+			else{
+				item_info = item_info + "&nbsp;||&nbsp;" + info[name][key][food_item];
+			}
+			count = count + 1;
+		}
+		$('#info').append('<p>' + item_info + '</p>');
+            }
+
+            d3.select('#svg1 .nodes').selectAll('circle').attr('class', function(d){
+                // 是目前悬浮的那个
+                if (d.id == name) {
+                    return '';
+                }
+
+                // 不是悬浮的那个，需要显示相邻的circle，对其他的圆圈做处理
+                // 遍历图中的所有link
+                for (var i = 0; i < graph.links.length; i++) {
+                    if (graph.links[i]['source'].id == name && graph.links[i]['target'].id == d.id) {
+                        return '';
+                    }
+                    if (graph.links[i]['target'].id == name && graph.links[i]['source'].id == d.id) {
+                        return '';
+                    }
+                }
+
+                return 'inactive';
+            });
+
+            // 处理连接line, 不相连的line不显示
+            d3.select("#svg1 .links").selectAll('line').attr('class', function(d) {
+                if (d.source.id == name || d.target.id == name) {
+                    return '';
+                } else {
+                    return 'inactive';
+                }
+            });
+
+            // 只显示之间相连的关系名
+            d3.select("#svg1 .linetexts").selectAll('text').attr('class', function(d) {
+                if (d.source.id == name || d.target.id == name) {
+                    d3.select(this).attr('fill-opacity', 1);
+                } else {
+                    d3.select(this).attr('fill-opacity', 0);
+                }
+            })
+
+            // UPDATE: 对于text也同时隐藏
+            d3.select('#svg1 .texts').selectAll('text').attr('class', function(d){
+                if (d.id == name) {
+                    return '';
+                }
+
+                for (var i = 0; i < graph.links.length; i++) {
+                    if (graph.links[i]['source'].id == name && graph.links[i]['target'].id == d.id) {
+                        return '';
+                    }
+                    if (graph.links[i]['target'].id == name && graph.links[i]['source'].id == d.id) {
+                        return '';
+                    }
+                }
+
+                return 'inactive';
+            });
+        }
+    });
+
+    // 处理鼠标移开的事件上
+    $('#svg1').on('mouseleave', '.nodes circle', function(event) {
+        if (!dragging && 0) {
+            
+	    /*
+            //如果搜索框还有东西，移开鼠标后仍然显示搜索的结果
+            var name = $('#search input').val();
+            d3.select('#svg1 .nodes').selectAll('circle').attr('class', function(d) {
+                if (d.id.toLowerCase().indexOf(name.toLowerCase()) >= 0) {
+                    return '';
+                } else {
+                   return 'inactive';
+                }
+            });
+            d3.select('#svg1 .texts').selectAll('text').attr('class', function(d) {
+                if (d.id.toLowerCase().indexOf(name.toLowerCase()) >= 0) {
+                    return '';
+                } else {
+                    return 'inactive';
+                }
+            });
+            d3.select("#svg1 .links").selectAll('line').attr('class', function(d) {
+                return 'inactive';
+            });
+	    //d3.select('#svg1 .links').selectAll('line').attr('class', '');;
+	    d3.select("#svg1 .linetexts").selectAll('text').attr('fill-opacity', function(d) {
+                return 0;
+            });
+	    */
+        }
+        else if (!dragging) {
+            
+            // 否则，离开时把nodes和links的inactive去掉
+            //d3.select('#svg1 .texts').selectAll('text').attr('class', '');;
+            //d3.select('#svg1 .nodes').selectAll('circle').attr('class', '');;
+            //d3.select('#svg1 .links').selectAll('line').attr('class', '');;
+            d3.select("#svg1 .linetexts").selectAll('text').attr('fill-opacity', 0);
+	    d3.select('#svg1 .nodes').selectAll('circle').attr('class', function(d){
+                // 当前选中类型实体显示
+                
+		if (d.group == 0 && 1) {
+		    return '';
+		}
+		else if (d.group == 1 && 1){
+		    return '';
+		}
+		else if (d.group == 2 && 1){
+		    return '';
+		}
+		else{
+		    return 'inactive'
+		}
+            });
+            
+	    d3.select("#svg1 .links").selectAll('line').attr('class', function(d) {
+		    return '';
+            });
+	    d3.select('#svg1 .texts').selectAll('text').attr('class', function(d){
+                // 当前选中类型实体显示
+		if (d.group == 0 ) {
+		    return '';
+		}
+		else if (d.group == 1 ){
+		    return '';
+		}
+		else if (d.group == 2 ){
+		    return '';
+		}
+		else{
+		    return 'inactive'
+		}
+            });
+        }
+    });
+
+    $('#svg1').on('mouseenter', '.texts text', function(event) {
+        if (!dragging) {
+            var name = $(this).attr('name');
+            
+            var namee =$(this).attr('namee')
+            console.log($(this).attr('namee'),namee,"namee")
+            // 把info标题的颜色改为结点所属类别的颜色
+             $('#info h1').css('color', "black").text(namee);
+            // 把info标题的颜色改为结点所属类别的颜色
+            $('#info h5').css('color', "black").text(name);
+            // 去掉旧的<p></p>
+            $('#info p').remove();
+
+            
+	    
+
+
+            d3.select('#svg1 .texts').selectAll('text').attr('class', function(d){
+                if (d.id == name) {
+                    return '';
+                }
+
+                for (var i = 0; i < graph.links.length; i++) {
+                    if (graph.links[i]['source'].id == name && graph.links[i]['target'].id == d.id) {
+                        return '';
+                    }
+                    if (graph.links[i]['target'].id == name && graph.links[i]['source'].id == d.id) {
+                        return '';
+                    }
+                }
+
+                return 'inactive';
+            });
+
+            d3.select("#svg1 .links").selectAll('line').attr('class', function(d) {
+                if (d.source.id == name || d.target.id == name) {
+                    return '';
+                } else {
+                    return 'inactive';
+                }
+            });
+
+            // 只显示之间相连的关系名
+            d3.select("#svg1 .linetexts").selectAll('text').attr('class', function(d) {
+                if (d.source.id == name || d.target.id == name) {
+                    d3.select(this).attr('fill-opacity', 1);
+                } else {
+                    d3.select(this).attr('fill-opacity', 0);
+                }
+            })
+
+            // UPDATE: 对于circle也同时隐藏
+            d3.select('#svg1 .nodes').selectAll('circle').attr('class', function(d){
+                // 是目前悬浮的那个
+                if (d.id == name) {
+                    return '';
+                }
+
+                // 不是悬浮的那个，需要显示相邻的circle，对其他的圆圈做处理
+                // 遍历图中的所有link
+                for (var i = 0; i < graph.links.length; i++) {
+                    if (graph.links[i]['source'].id == name && graph.links[i]['target'].id == d.id) {
+                        return '';
+                    }
+                    if (graph.links[i]['target'].id == name && graph.links[i]['source'].id == d.id) {
+                        return '';
+                    }
+                }
+
+                return 'inactive';
+            });
+        }
+    });
+
+    $('#svg1').on('mouseleave', '.texts text', function(event) {
+        if (!dragging && 0) {
+            
+	    /*
+            // 如果搜索框还有东西，移开鼠标后仍然显示搜索的结果
+            var name = $('#search input').val();
+            d3.select('#svg1 .nodes').selectAll('circle').attr('class', function(d) {
+                if (d.id.toLowerCase().indexOf(name.toLowerCase()) >= 0) {
+                   return '';
+                } else {
+                   return 'inactive';
+                }
+            });
+            d3.select('#svg1 .texts').selectAll('text').attr('class', function(d) {
+                if (d.id.toLowerCase().indexOf(name.toLowerCase()) >= 0) {
+                    return '';
+                } else {
+                    return 'inactive';
+                }
+            });
+            d3.select("#svg1 .links").selectAll('line').attr('class', function(d) {
+                return 'inactive';
+            });
+	    //d3.select('#svg1 .links').selectAll('line').attr('class', '');;
+	    d3.select("#svg1 .linetexts").selectAll('text').attr('fill-opacity', function(d) {
+                return 0;
+            });
+	    */
+        }
+        else if (!dragging && 1) {
+            
+            // 否则，离开时把nodes和links的inactive去掉
+            //d3.select('#svg1 .texts').selectAll('text').attr('class', '');;
+            //d3.select('#svg1 .nodes').selectAll('circle').attr('class', '');;
+            //d3.select('#svg1 .links').selectAll('line').attr('class', '');;
+            d3.select("#svg1 .linetexts").selectAll('text').attr('fill-opacity', 0);
+	    d3.select('#svg1 .nodes').selectAll('circle').attr('class', function(d){
+                // 当前选中类型实体显示
+		if (d.group == 0 && 1) {
+		    return '';
+		}
+		else if (d.group == 1 && 1){
+		    return '';
+		}
+		else if (d.group == 2 && 1){
+		    return '';
+		}
+		else{
+		    return 'inactive'
+		}
+            });
+	    d3.select("#svg1 .links").selectAll('line').attr('class', function(d) {
+		    return '';
+
+            });
+	    d3.select('#svg1 .texts').selectAll('text').attr('class', function(d){
+                // 当前选中类型实体显示
+		if (d.group == 0 && 1) {
+		    return '';
+		}
+		else if (d.group == 1 && 1){
+		    return '';
+		}
+		else if (d.group == 2 && 1){
+		    return '';
+		}
+		else{
+		    return 'inactive'
+		}
+            });
+        }
+    });
+
+    $("#btn1").click(
+        function()
+        {
+            
+            usertext=$("#utext").val()
+            var flag=textShow()
+            var data=
+            {
+             'question':usertext
+            }
+            console.log("ajax")
+            $.ajax({
+                type:'GET',
+                url:'/test',
+                data:data,
+                dataType:'json',//希望服务器返回json格式的数据
+                success:
+                function(data){
+                    // console.log(JSON.stringify(data));
+                    console.log(data[0])
+                    // console.log(data[1])
+                    // console.log(JSON.parse(data[0]));
+                    // console.log(JSON.parse(data[1]));
+                    console.log(flag)
+                    if(flag==0)
+                    {
+                        aitext=data[1];
+                        textShow_ai();
+                    }
+                    // console.log(data);
+                    // console.log(data[0]);
+                    // load_g(JSON.parse(data[0]))
+
+    {
+    d3.select("#svg1").html("")
+    var graph;
+        graph = data[0];
+        // console.log(data)
+        // document.getElementById("svg1").innerHTML=""
+        // D3数据驱动文档
+        // 用links去驱动line的线宽
+
+        svg = d3.select("#svg1"), 
+              width = document.getElementById("svg1").clientWidth*0.7,
+              height = document.getElementById("svg1").clientHeight*0.8
+    colors = ['#005CAF', '#A5DEE4', '#B28FCE'];
+
+    simulation = d3.forceSimulation()
+        .force("link", d3.forceLink().id(function(d) {
+            return d.id;
+        }))
+        .force("charge", d3.forceManyBody().strength(-400))
+        .force("center", d3.forceCenter(width / 2, height / 2));
+        var link = svg.append('g')
+            .attr("class", "links")
+            .selectAll("line")
+            .data(graph.links)
+            .enter().append("line")
+            .style("color","red")
+            .attr('stroke-width', function(d){
+            // return Math.sqrt(d.value);
+            return 4;//连线宽度
+            });
+
+        //边上的文字（实体之间的关系） 
+        var linktext = svg.append('g')
+            .attr("class", "linetexts")
+            .selectAll("text")
+            .data(graph.links)
+            .enter()
+            .append("text")
+            .style("display","block")
+            .style("color","red")
+            .text(function(d){
+                return d.relation;
+            })
+            .attr('fill', "black");//边上字颜色
+
+        // 添加所有的node
+        var node = svg.append('g')
+            .attr('class', 'nodes')
+            .selectAll('circle')
+            .data(graph.nodes)
+            .enter().append('circle')
+            .attr("r", function(d) {
+                return d.size
+            })
+            .attr('fill', function(d){ // 填充的颜色
+                return colors[d.group];
+            })
+            .attr('stroke', 'none')    // 没有描边
+            .attr('name', function(d){
+                return d.id;
+            })
+            .attr('namee',function(d){
+                return d.class;
+            })
+            .call(d3.drag()             // 绑定d3的拖动函数
+                .on("start", dragstarted) // 拖动开始
+                .on("drag", dragged)      // 拖动进行
+                .on("end", dragended));   // 拖动结束
+
+        // 文本
+        // 两种显示模式，每个结点可以用一个圆或者文本表示
+        var text = svg.append('g')
+            .attr("class", "texts")
+            .selectAll("text")
+            .data(graph.nodes)
+            .enter().append("text")
+            .attr("font-size", function(d) {
+                return d.size
+            })
+            .attr("fill", function(d) {
+                return colors[d.group];
+            })
+            .attr('name', function(d) {
+                return d.id;
+            })
+            .attr('namee',function(d){
+                return d.class;
+            })
+            .text(function(d) {
+                return d.id;
+            })
+            .attr('text-anchor', 'middle')
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
+
+        // 给node加title, 当鼠标悬浮在圆圈上的时候
+        node.append('title').text(function(d){
+            return d.id;
+        })
+
+        // 处理缩放
+        svg.call(d3.zoom()
+            .scaleExtent([1 / 8, 8])
+            .on("zoom", zoomed));
+         
+        function zoomed() {
+            link.attr("transform", d3.event.transform);
+            node.attr("transform", d3.event.transform);
+            text.attr("transform", d3.event.transform);
+            linktext.attr('transform', d3.event.transform);
+        }
+
+        simulation
+            .nodes(graph.nodes)
+            .on("tick", ticked);
+
+        simulation.force("link")
+            .links(graph.links);
+
+        function ticked() {
+            link
+                .attr("x1", function(d) {
+                    return d.source.x;
+                })
+                .attr("y1", function(d) {
+                    return d.source.y;
+                })
+                .attr("x2", function(d) {
+                    return d.target.x;
+                })
+                .attr("y2", function(d) {
+                    return d.target.y;
+                });
+
+            linktext.attr("dx",function(d){ return (d.source.x + d.target.x) / 2 ; });
+            linktext.attr("dy",function(d){ return (d.source.y + d.target.y) / 2 ; });
+
+            node
+                .attr("cx", function(d) {
+                    return d.x;
+                })
+                .attr("cy", function(d) {
+                    return d.y;
+                });
+
+            text
+                .attr("dx", function(d) {
+                    return d.x;
+                })
+                .attr("dy", function(d) {
+                    return d.y;
+                });
+        }
+    }
+                }
+            });
+        }
+    )
+    
+});
+
+    </script>
+    
+    
+   
+    <div class="title" id="project_title">
+        KGQA
+        <br>
+        <font style="font-size:20px">
+        Zhuoran Yin, Qiwen Gu, Yining Tang
+    </font>
+    </div>
+    <div class="qa">
+        <div class="qatitle">
+            医疗助手O宝
+        </div>
+        <div class="qacontent" style="background-color:#ffffff00;">
+            <div class="bubble" id="bubble"></div>
+            
+            <div class="bubble_r" id="bubble_r"></div>
+            <div class="bubble" id="bubble_ai"></div>
+        </div>
+        <div class="form-group">
+            <textarea class="text1 form-control" id="utext" style="border-left: none; border-right: none; ">感冒吃什么药</textarea>
+            <button class="send btn btn-info" id="btn1">send</button>
+          </div>
+          <div id="mode" class="mode">
+            <span class="active" style="border-top-right-radius: 0;border-bottom-right-radius: 0;">Circles</span>
+            <span style="border-top-left-radius: 0;border-bottom-left-radius: 0;position: relative;left: -5px;">Texts</span>
+        </div>
+    </div>
+    
+
+
+
+
+
+    <!-- <h1 style="color: #fff;font-size: 32px;margin-bottom: 10px;margin-top: 10px; text-align: left;margin-left: 40px">AI Food Time(爱食光) mini版</h1> -->
+
+    <!-- 定义div存放关系图 -->
+    <!-- NOTE: 父元素采用相对定位，里面的元素采用绝对定位 -->
+    <div style="left:20%;width:80%;height:100%;text-align: center;position: absolute; background-color: rgb(202, 229, 255);">
+        <svg height="560" width="800" style="position:relaltive;top:50%;width:100%;height:100%;" id="svg1"></svg>
+        
+        <!-- 每个结点的信息 -->
+        <div id="info" class="info" style="color:black;">
+            <h1>Hi!</h1>
+            <h5></h5>
+           
+        </div>
+        <h6 class="hint">
+            ·问题回答略有延迟，请耐心等待！<br>
+            ·鼠标放在结点上查看详细内容！<br>
+            ·可以切换文字图或点图哦！<br>
+            ·节点可以拖拽！
+        </h6>
+    </div>
+    
+</body>
+</html>
